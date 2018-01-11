@@ -133,3 +133,39 @@ describe("Get /todos/id test",(done)=>{
 //       .end(done)
 //       })
  });
+
+
+ describe("PATCH todis/:id",()=>{
+
+   it("should update the todo",(done)=>{
+      var hexId=users[0]._id.toHexString();
+
+      var updateTodo={
+        text:"updated text",
+        completed:true
+      }
+
+      request(app)
+      .patch(`/todos/${hexId}`)
+      .send(updateTodo)
+      .expect(200)
+      .expect((res)=>{
+          expect(res.body.todo.text).toBe(updatedTo.text);
+          expect(res.body.todo.completedAt).toBe('number');
+      })
+      .end((err,res)=>{
+        if(err){
+          return done(err);
+        }
+
+        Todo.finById(hexId).then((todo)=>{
+            expect(todo.text).toBe(updateTodo.text);
+        }).catch((e)=>{
+          console.log(e)
+        })
+      })
+   })
+
+   it("should return 404 i")
+
+ })

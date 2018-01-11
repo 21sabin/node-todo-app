@@ -1,6 +1,7 @@
 
 var {mongoose}=require("./db/mongoose")
 var {ObjectID}=require("mongodb")
+var _ = require('lodash');
 
 var {Todo}=require("./model/todo.js")
 var {Users}=require("./model/user.js")
@@ -28,6 +29,27 @@ app.post("/todos",(req,res)=>{
   },(err)=>{
     res.status(400).send(err);
   })
+})
+
+app.patch("/todos/:id",(req,res)=>{
+        var id=req.params.id;
+        var body=_.pick(req.body,['text','complete'])
+
+        if(_.isBoolean(body.complete) && body.complete){
+          body.completedAt=new Date().getTime();
+        }else{
+            body.complete=false;
+            body.completedAt=null;
+        }
+
+        Todo.findByIdUpdate(id,{$set:body},{new:true}).then((todo)=>{
+          if(!todo){
+            return res.status(404).send();
+          }
+          res.send({todo});
+        }).catch((e)=>{
+            return res.status(400).send();
+        })
 })
 
 app.delete("/users/:id",(req,res,next)=>{
