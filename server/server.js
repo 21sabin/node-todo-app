@@ -1,5 +1,6 @@
 
 var {mongoose}=require("./db/mongoose")
+var {ObjectID}=require("mongodb")
 
 var {Todo}=require("./model/todo.js")
 var {Users}=require("./model/user.js")
@@ -8,6 +9,8 @@ var express=require("express");
 var bodyParser=require("body-parser");
 
 var app=express();
+
+const port=process.env.PORT || 3000;
 
 //providing express a json body prser using middleware
 app.use(bodyParser.json())
@@ -27,14 +30,68 @@ app.post("/todos",(req,res)=>{
   })
 })
 
+app.delete("/users/:id",(req,res,next)=>{
+  var id=req.params.id;
+  if(!ObjectID.isValid(id)){
+      res.status(400).send({
+        msg:"id is not valid"
+      })
+  }
+
+  Users.findByIdAndRemove(id).then((result)=>{
+    if(!result){
+      return res.status(404).send({
+        msg:"id not found"
+      })
+    }
+
+    res.send({result,status:"ok"});
+
+  }).catch(()=>{
+    res.send(400).send();
+  })
+
+})
+
 app.get("/todos",(req,res)=>{
   Todo.find().then((doc)=>{
-    res.send({
-      doc
-    });
+    res.send({ doc });
   },(e)=>{
     console.log(e);
   })
+})
+
+//url paramater is receiverd by :id
+app.get("/todos/:id",(req,res)=>{
+
+    var id=req.params.id;
+    if(!ObjectID.isValid(id)){
+      return res.status(404).send()
+    }
+
+
+
+    //no need to pass id on objectId as todo is mongoose modelS
+    Todo.findById(id).then((todo)=>{
+      console.log(todo)
+      if(!todo){
+        return res.status(404).send();
+      }
+
+
+        res.send({
+          todo
+        })
+
+
+    }).catch((e)=>{
+      console.log(e)
+      // res.send({
+      //   e
+      // })
+      res.status(400).send()
+    })
+
 })
 
 app.post("/users",(req,res)=>{
@@ -52,8 +109,8 @@ app.post("/users",(req,res)=>{
 
 })
 
-app.listen(3000,()=>{
-  console.log("started at 3000")
+app.listen(port,()=>{
+  console.log(`started at ${port}`)
 })
 
 module.exports={app}
